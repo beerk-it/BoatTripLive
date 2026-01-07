@@ -277,8 +277,8 @@
           maxSpacesStr,      // D
           bookedStr,         // E
           durationStr,       // F
-          imageLink,         // G (ไม่ใช้)
-          imageStatic        // H (Image_Static ใช้ค่านี้)
+          imageLink,         // G (backup ถ้า H ว่าง)
+          imageStatic        // H (Image_Static ใช้ค่านี้เป็นหลัก)
         ] = row;
 
         // ข้าม header แถวแรกถ้ามีคำว่า boat_name
@@ -318,7 +318,9 @@
         const left = document.createElement("div");
         left.className = "card-left";
         const img = document.createElement("img");
-        const normalizedImg = normalizeImage(imageStatic);
+        const mainImg = (imageStatic || "").trim();
+        const backupImg = (imageLink || "").trim(); // เผื่อ H ว่างจะลองใช้ G
+        const normalizedImg = normalizeImage(mainImg || backupImg);
         img.src = normalizedImg || "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=1200";
         img.alt = boatName;
         img.onerror = () => {
