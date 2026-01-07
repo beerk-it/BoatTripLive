@@ -242,6 +242,17 @@
     });
   }
 
+  // ปรับลิงก์รูปจาก Google Drive ให้เป็น viewable
+  function normalizeImage(url) {
+    if (!url) return null;
+    // ตัวอย่างลิงก์: https://drive.google.com/file/d/<ID>/view?usp=drive_link
+    const m = url.match(/https?:\/\/drive\.google\.com\/file\/d\/([^/]+)\//i);
+    if (m && m[1]) {
+      return `https://drive.google.com/uc?export=view&id=${m[1]}`;
+    }
+    return url;
+  }
+
   async function loadTrips(simulatedDate) {
     const cardsContainer = document.getElementById("cards");
     const errorEl = document.getElementById("error");
@@ -303,8 +314,12 @@
         const left = document.createElement("div");
         left.className = "card-left";
         const img = document.createElement("img");
-        img.src = imageLink || "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=1200";
+        const normalizedImg = normalizeImage(imageLink);
+        img.src = normalizedImg || "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=1200";
         img.alt = boatName;
+        img.onerror = () => {
+          img.src = "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=1200";
+        };
         left.appendChild(img);
 
         const loc = document.createElement("div");
