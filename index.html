@@ -274,7 +274,8 @@
           maxSpacesStr,      // D
           bookedStr,         // E
           durationStr,       // F
-          imageLink          // G
+          imageStatic        // G (Image_Static)
+          // Column H ถูกข้ามไปตามคำขอ
         ] = row;
 
         // ข้าม header แถวแรกถ้ามีคำว่า boat_name
@@ -314,7 +315,7 @@
         const left = document.createElement("div");
         left.className = "card-left";
         const img = document.createElement("img");
-        const normalizedImg = normalizeImage(imageLink);
+        const normalizedImg = normalizeImage(imageStatic);
         img.src = normalizedImg || "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=1200";
         img.alt = boatName;
         img.onerror = () => {
