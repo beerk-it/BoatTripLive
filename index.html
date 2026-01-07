@@ -198,10 +198,10 @@
 
 <script>
   // === CONFIG ของคุณ ===
-  const SHEET_ID   = "1PPN4Hy--MxFfzX2lYTPHaFGntQkZ50gpMqLeYzrr60c";
-  const API_KEY    = "AIzaSyDFD-r5VzdgqABbHPW7qAcZLqbYl1IVVQs";
-  // แท็บ LiveTrip, A:boat_name, B:start_date, C:end_date, D:max_spaces, E:booked, F:duration, G:imageLink
-  const RANGE      = "LiveTrip!A2:G100";
+  // ใช้ลิงก์ publish เป็น CSV เพื่อเลี่ยง 403 (ไม่ต้องพึ่ง API key)
+  // ถ้าใช้ลิงก์นี้ไม่ได้ ให้ตรวจสอบว่า publish to web แล้วหรือยัง
+  const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTVRDJ5JQbkKChx1EbxEZ8GP2dRnfJ4_k9KHUx_cOgVICWIh5QcCJCMyc4l5zSGYohd5iY5msvnSijG/pub?gid=907829414&single=true&output=csv";
+
 
   function parseDate(d) {
     if (!d) return null;
@@ -222,22 +222,40 @@
     return offset + 1;
   }
 
+  // parse CSV text to rows (array of array)
+  function parseCsv(text) {
+    const lines = text.trim().split(/\r?\n/);
+    return lines.map((line) => {
+      // simple CSV split that handles quoted commas
+      const result = [];
+      let current = "";
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"' && line[i + 1] === '"') { current += '"'; i++; continue; }
+        if (ch === '"') { inQuotes = !inQuotes; continue; }
+        if (ch === "," && !inQuotes) { result.push(current); current = ""; continue; }
+        current += ch;
+      }
+      result.push(current);
+      return result;
+    });
+  }
+
   async function loadTrips(simulatedDate) {
     const cardsContainer = document.getElementById("cards");
     const errorEl = document.getElementById("error");
     cardsContainer.innerHTML = "";
     errorEl.style.display = "none";
 
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(RANGE)}?key=${API_KEY}`;
-
     try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Google Sheets API error: " + res.status);
-      const data = await res.json();
-      const rows = data.values || [];
+      const res = await fetch(CSV_URL);
+      if (!res.ok) throw new Error("Google Sheets fetch error: " + res.status);
+      const text = await res.text();
+      const rows = parseCsv(text);
       const today = simulatedDate || new Date();
 
-      rows.forEach((row) => {
+      rows.forEach((row, idx) => {
         const [
           boatName,          // A
           startDateStr,      // B
@@ -248,6 +266,8 @@
           imageLink          // G
         ] = row;
 
+        // ข้าม header แถวแรกถ้ามีคำว่า boat_name
+        if (idx === 0 && (boatName || "").toLowerCase() === "boat_name") return;
         if (!boatName || !startDateStr || !durationStr) return;
 
         const startDate = parseDate(startDateStr);
@@ -369,7 +389,7 @@
       });
 
       if (!rows.length) {
-        errorEl.textContent = "No data rows returned from Google Sheets.";
+        errorEl.textContent = "No data rows returned from CSV.";
         errorEl.style.display = "block";
       }
     } catch (err) {
