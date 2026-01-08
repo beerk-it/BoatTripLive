@@ -43,6 +43,10 @@
       color: #e5e7eb;
       padding: 6px 10px;
       border-radius: 6px;
+      cursor: default;
+    }
+    .simulate-date input[readonly] {
+      cursor: default;
     }
     .cards {
       display: grid;
@@ -197,8 +201,8 @@
       <div class="subtitle">Real-time boat trip monitoring (from Google Sheets)</div>
     </div>
     <div class="simulate-date">
-      <span>Simulate date:</span>
-      <input type="date" id="simulate-date" />
+      <span>TODAY:</span>
+      <input type="date" id="simulate-date" readonly />
     </div>
   </div>
 
@@ -493,14 +497,20 @@
   }
 
   const dateInput = document.getElementById("simulate-date");
-  const todayISO = new Date().toISOString().slice(0, 10);
-  dateInput.value = todayISO;
-  dateInput.addEventListener("change", () => {
-    const d = new Date(dateInput.value);
-    if (!isNaN(d.getTime())) loadTrips(d);
-  });
-
-  loadTrips(new Date(todayISO));
+  
+  // อัปเดตวันที่เป็นวันปัจจุบันเสมอ
+  function updateTodayDate() {
+    const today = new Date();
+    const todayISO = today.toISOString().slice(0, 10);
+    dateInput.value = todayISO;
+    loadTrips(today);
+  }
+  
+  // อัปเดตครั้งแรก
+  updateTodayDate();
+  
+  // อัปเดตทุกนาที (เผื่อเปลี่ยนวัน)
+  setInterval(updateTodayDate, 60000);
 </script>
 </body>
 </html>
