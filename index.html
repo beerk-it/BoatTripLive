@@ -130,7 +130,7 @@
       font-size: 11px;
       letter-spacing: 0.06em;
       text-transform: uppercase;
-      color: #6b7280;
+      color: #ffffff;
       margin-bottom: 6px;
     }
     .dots {
@@ -161,12 +161,12 @@
     }
     .day-text {
       font-size: 12px;
-      color: #9ca3af;
+      color: #ffffff;
       text-align: right;
     }
     .capacity {
       font-size: 12px;
-      color: #9ca3af;
+      color: #ffffff;
     }
     .capacity strong { color: #e5e7eb; }
 
@@ -332,7 +332,8 @@
         const maxSpaces = parseInt(maxSpacesStr || "0", 10);
         const booked = parseInt(bookedStr || "0", 10);
 
-        const todayIndex = isMaintenance ? null : getCurrentDayIndex(today, startDate, durationDays);
+        // สำหรับ Maintenance ให้คำนวณ todayIndex เหมือนปกติ (ใช้ logic เดียวกัน)
+        const todayIndex = getCurrentDayIndex(today, startDate, durationDays);
         const isRunning = todayIndex !== null && !isMaintenance;
         const isBefore = today < startDate;
         const isAfter  = today > endDate;
@@ -396,7 +397,7 @@
         durationSpan.innerHTML = `<strong>${durationDays}</strong> nights`;
         const capacitySpan = document.createElement("div");
         capacitySpan.className = "capacity";
-        capacitySpan.innerHTML = `Guests: <strong>${booked}/${maxSpaces || "-"}</strong>`;
+        capacitySpan.innerHTML = `Guests: <strong style="color: #ffffff;">${booked}/${maxSpaces || "-"}</strong>`;
         meta.appendChild(dateSpan);
         meta.appendChild(durationSpan);
         meta.appendChild(capacitySpan);
@@ -416,10 +417,18 @@
           const dot = document.createElement("div");
           dot.className = "dot";
           
-          if (isMaintenance) {
-            // Maintenance ใช้วงกลมสีเหลือง
-            dot.classList.add("dot-maintenance");
+          if (isAfter) {
+            // ถ้า Finished ให้ไฟติดทุกดวง (ทุกวงกลมเป็นสีเขียว)
+            dot.classList.add("dot-finished");
+          } else if (isMaintenance) {
+            // Maintenance ใช้ logic เหมือนสีเขียว (ไฟติดไฟดับ) แต่เปลี่ยนเป็นสีเหลือง
+            if (todayIndex && i < todayIndex) {
+              dot.classList.add("dot-maintenance");
+            } else if (todayIndex === i) {
+              dot.classList.add("dot-maintenance");
+            }
           } else {
+            // ทริปปกติ
             if (todayIndex && i < todayIndex) {
               dot.classList.add("dot-finished");
             } else if (todayIndex === i) {
@@ -444,7 +453,11 @@
         const rightCol = document.createElement("div");
         rightCol.className = "day-text";
         if (isMaintenance) {
-          rightCol.textContent = `Maintenance`;
+          if (todayIndex) {
+            rightCol.textContent = `nights ${todayIndex} / ${durationDays}`;
+          } else {
+            rightCol.textContent = `Maintenance`;
+          }
         } else if (todayIndex) {
           rightCol.textContent = `nights ${todayIndex} / ${durationDays}`;
         } else if (isBefore) {
