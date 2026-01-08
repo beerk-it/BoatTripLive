@@ -24,7 +24,7 @@
     .title {
       font-size: 28px;
       font-weight: 700;
-      color: #38bdf8;
+      color: #ffffff;
     }
     .subtitle {
       font-size: 14px;
@@ -291,7 +291,7 @@
           maxSpacesStr,      // D
           bookedStr,         // E
           durationStr,       // F
-          imageLink,         // G (backup ถ้า H ว่าง)
+          productName,       // G (product_name)
           imageStatic        // H (Image_Static ใช้ค่านี้เป็นหลัก)
         ] = row;
 
@@ -362,8 +362,7 @@
         left.className = "card-left";
         const img = document.createElement("img");
         const mainImg = (imageStatic || "").trim();
-        const backupImg = (imageLink || "").trim(); // เผื่อ H ว่างจะลองใช้ G
-        const normalizedImg = normalizeImage(mainImg || backupImg);
+        const normalizedImg = normalizeImage(mainImg);
         img.src = normalizedImg || "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=1200";
         img.alt = boatName;
         img.onerror = () => {
@@ -389,6 +388,15 @@
         statusEl.textContent = statusText;
         header.appendChild(nameEl);
         header.appendChild(statusEl);
+        
+        // แสดง product_name ใต้ชื่อเรือ (บนวันที่)
+        const productNameEl = document.createElement("div");
+        productNameEl.style.fontSize = "12px";
+        productNameEl.style.color = "#9ca3af";
+        productNameEl.style.marginTop = "4px";
+        productNameEl.style.marginBottom = "4px";
+        const productNameValue = (productName || "").trim();
+        productNameEl.textContent = productNameValue === "-No Value-" || !productNameValue ? "-" : productNameValue;
 
         const meta = document.createElement("div");
         meta.className = "trip-meta";
@@ -405,6 +413,10 @@
         meta.appendChild(dateSpan);
         meta.appendChild(durationSpan);
         meta.appendChild(capacitySpan);
+
+        right.appendChild(header);
+        right.appendChild(productNameEl);
+        right.appendChild(meta);
 
         const progressRow = document.createElement("div");
         progressRow.className = "progress-row";
@@ -476,8 +488,6 @@
         progressRow.appendChild(leftCol);
         progressRow.appendChild(rightCol);
 
-        right.appendChild(header);
-        right.appendChild(meta);
         right.appendChild(progressRow);
 
         card.appendChild(left);
