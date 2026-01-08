@@ -110,6 +110,7 @@
     .status-running { background: rgba(22,163,74,0.15); color: #4ade80; border: 1px solid #22c55e; }
     .status-upcoming { background: rgba(234,179,8,0.1); color: #facc15; border: 1px solid #eab308; }
     .status-finished { background: rgba(148,163,184,0.08); color: #9ca3af; border: 1px solid #6b7280; }
+    .status-maintenance { background: rgba(234,179,8,0.2); color: #fbbf24; border: 1px solid #f59e0b; }
     .trip-meta {
       display: flex;
       flex-wrap: wrap;
@@ -134,8 +135,10 @@
     }
     .dots {
       display: flex;
+      flex-wrap: wrap;
       gap: 6px;
       align-items: center;
+      max-width: 100%;
     }
     .dot {
       width: 9px;
@@ -147,6 +150,10 @@
     .dot-active {
       background: #38bdf8;
       box-shadow: 0 0 0 1px #0ea5e9, 0 0 12px rgba(56, 189, 248, 0.9);
+    }
+    .dot-maintenance {
+      background: #fbbf24;
+      box-shadow: 0 0 0 1px #f59e0b, 0 0 12px rgba(251, 191, 36, 0.9);
     }
     .dot-finished {
       background: #22c55e;
@@ -286,17 +293,37 @@
 
         // ข้าม header แถวแรกถ้ามีคำว่า boat_name
         if (idx === 0 && (boatName || "").toLowerCase() === "boat_name") return;
-        if (!boatName || !startDateStr || !durationStr) return;
+        if (!boatName || !startDateStr) return;
 
         const startDate = parseDate(startDateStr);
-        let durationDays = parseInt(durationStr, 10);
-        if (!durationDays && endDateStr) {
-          const endDateTmp = parseDate(endDateStr);
-          if (startDate && endDateTmp) {
-            durationDays = diffDays(startDate, endDateTmp) + 1;
+        if (!startDate) return;
+
+        // ตรวจสอบว่า Duration เป็นตัวเลขหรือไม่
+        const durationStrTrimmed = (durationStr || "").trim();
+        const isNumericDuration = /^\d+$/.test(durationStrTrimmed);
+        let durationDays = parseInt(durationStrTrimmed, 10);
+        
+        // ถ้าไม่ใช่ตัวเลข ให้เป็น Maintenance
+        const isMaintenance = !isNumericDuration;
+        
+        if (!isMaintenance) {
+          if (!durationDays && endDateStr) {
+            const endDateTmp = parseDate(endDateStr);
+            if (startDate && endDateTmp) {
+              durationDays = diffDays(startDate, endDateTmp) + 1;
+            }
           }
+          if (!durationDays) return;
+        } else {
+          // สำหรับ Maintenance ใช้ค่า default หรือคำนวณจาก endDate
+          if (endDateStr) {
+            const endDateTmp = parseDate(endDateStr);
+            if (startDate && endDateTmp) {
+              durationDays = diffDays(startDate, endDateTmp) + 1;
+            }
+          }
+          if (!durationDays) durationDays = 1; // fallback
         }
-        if (!startDate || !durationDays) return;
 
         const endDate = endDateStr
           ? parseDate(endDateStr)
@@ -305,15 +332,23 @@
         const maxSpaces = parseInt(maxSpacesStr || "0", 10);
         const booked = parseInt(bookedStr || "0", 10);
 
-        const todayIndex = getCurrentDayIndex(today, startDate, durationDays);
-        const isRunning = todayIndex !== null;
+        const todayIndex = isMaintenance ? null : getCurrentDayIndex(today, startDate, durationDays);
+        const isRunning = todayIndex !== null && !isMaintenance;
         const isBefore = today < startDate;
         const isAfter  = today > endDate;
 
         let statusText = "Upcoming";
         let statusClass = "status-upcoming";
-        if (isRunning) { statusText = "Running"; statusClass = "status-running"; }
-        else if (isAfter) { statusText = "Finished"; statusClass = "status-finished"; }
+        if (isMaintenance) { 
+          statusText = "Maintenance"; 
+          statusClass = "status-maintenance"; 
+        } else if (isRunning) { 
+          statusText = "LIVE"; 
+          statusClass = "status-running"; 
+        } else if (isAfter) { 
+          statusText = "Finished"; 
+          statusClass = "status-finished"; 
+        }
 
         const card = document.createElement("div");
         card.className = "card";
@@ -358,7 +393,7 @@
         const dateSpan = document.createElement("div");
         dateSpan.innerHTML = `<strong>${fmt(startDate)}</strong> - <strong>${fmt(endDate)}</strong>`;
         const durationSpan = document.createElement("div");
-        durationSpan.innerHTML = `<strong>${durationDays}</strong> Days`;
+        durationSpan.innerHTML = `<strong>${durationDays}</strong> nights`;
         const capacitySpan = document.createElement("div");
         capacitySpan.className = "capacity";
         capacitySpan.innerHTML = `Guests: <strong>${booked}/${maxSpaces || "-"}</strong>`;
@@ -376,15 +411,31 @@
         const dots = document.createElement("div");
         dots.className = "dots";
 
+        // สร้างวงกลมไม่เกิน 15 วงต่อแถว
         for (let i = 1; i <= durationDays; i++) {
           const dot = document.createElement("div");
           dot.className = "dot";
-          if (todayIndex && i < todayIndex) {
-            dot.classList.add("dot-finished");
-          } else if (todayIndex === i) {
-            dot.classList.add("dot-active");
+          
+          if (isMaintenance) {
+            // Maintenance ใช้วงกลมสีเหลือง
+            dot.classList.add("dot-maintenance");
+          } else {
+            if (todayIndex && i < todayIndex) {
+              dot.classList.add("dot-finished");
+            } else if (todayIndex === i) {
+              dot.classList.add("dot-active");
+            }
           }
+          
           dots.appendChild(dot);
+          
+          // ขึ้นบรรทัดใหม่ทุก 15 วง
+          if (i % 15 === 0 && i < durationDays) {
+            const br = document.createElement("div");
+            br.style.width = "100%";
+            br.style.flexBasis = "100%";
+            dots.appendChild(br);
+          }
         }
 
         leftCol.appendChild(progressLabel);
@@ -392,8 +443,10 @@
 
         const rightCol = document.createElement("div");
         rightCol.className = "day-text";
-        if (todayIndex) {
-          rightCol.textContent = `Day ${todayIndex} / ${durationDays}`;
+        if (isMaintenance) {
+          rightCol.textContent = `Maintenance`;
+        } else if (todayIndex) {
+          rightCol.textContent = `nights ${todayIndex} / ${durationDays}`;
         } else if (isBefore) {
           rightCol.textContent = `Starts in ${diffDays(today, startDate) * -1} days`;
         } else {
