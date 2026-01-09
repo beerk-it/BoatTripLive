@@ -424,12 +424,14 @@
           ? d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
           : "-";
         const dateSpan = document.createElement("div");
-        dateSpan.innerHTML = `<strong>${fmt(startDate)}</strong> - <strong>${fmt(endDate)}</strong>`;
+        dateSpan.innerHTML = `📅 <strong>${fmt(startDate)}</strong> - <strong>${fmt(endDate)}</strong>`;
         const durationSpan = document.createElement("div");
-        durationSpan.innerHTML = `<strong>${durationDays}</strong> <span style="color: #ffffff;">nights</span>`;
+        durationSpan.innerHTML = `🚢 <strong style="color: #38bdf8;">${durationDays}</strong> <span style="color: #38bdf8;">nights</span>`;
         const capacitySpan = document.createElement("div");
         capacitySpan.className = "capacity";
-        capacitySpan.innerHTML = `Guests: <strong style="color: #ffffff;">${booked}/${maxSpaces || "-"}</strong>`;
+        const bookedNum = (isNaN(booked) || booked === 0 || bookedStr === "-No Value-") ? "-" : booked;
+        const maxSpacesNum = (isNaN(maxSpaces) || maxSpaces === 0 || maxSpacesStr === "-No Value-") ? "-" : maxSpaces;
+        capacitySpan.innerHTML = `👥 <strong style="color: #22c55e;">${bookedNum}/${maxSpacesNum}</strong>`;
         meta.appendChild(dateSpan);
         meta.appendChild(durationSpan);
         meta.appendChild(capacitySpan);
