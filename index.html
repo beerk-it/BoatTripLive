@@ -28,6 +28,15 @@
       font-size: 28px;
       font-weight: 700;
       color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .title-logo {
+      height: 28px;
+      width: auto;
+      display: inline-block;
+      vertical-align: middle;
     }
     .subtitle {
       font-size: 14px;
@@ -211,7 +220,10 @@
 <div class="page">
   <div class="page-header">
     <div>
-      <div class="title">Liveaboard Dashboard</div>
+      <div class="title">
+        Liveaboard Dashboard
+        <img src="https://raw.githubusercontent.com/beerk-it/BoatTripLive/refs/heads/main/Vessel-Picture4-3/ML-Secondary-Logo-NAVY-BACKGROUND-rgb.jpg" alt="Logo" class="title-logo" />
+      </div>
       <div class="subtitle">Real-time boat trip monitoring (from Google Sheets)</div>
     </div>
     <div class="simulate-date">
@@ -542,7 +554,7 @@
   updateTodayDate();
   
   // อัปเดตทุกนาที (เผื่อเปลี่ยนวัน)
-  setInterval(updateTodayDate, 21600000); // 6 ชั่วโมงครั้ง
+  setInterval(updateTodayDate, 60000);
 </script>
 </body>
 </html>
